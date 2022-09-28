@@ -48,7 +48,7 @@ int setupServer()
     if(result)
     {
       //Actually connected
-      std::cout << "Host("<<host<<") connected on service("<<serv<<")\n";
+      std::cout << "Connected!\n";
     }
     else
     {
@@ -56,35 +56,30 @@ int setupServer()
       std::cout <<"Host("<<host<<") connected on service("<<htons(client.sin_port)<<")\n";
     }
     // While receiving - display the message
-  
-      char buffer[_SERVER.MAX_BUFFER];
-      while (true)
-      {
-        //clear the buffer
-        memset(buffer, 0, _SERVER.MAX_BUFFER);
-        //wait for message
-        int bytesRecv = recv(clientSocket, buffer, _SERVER.MAX_BUFFER, 0);
-        if(bytesRecv == -1)
-        {
-          std::cerr << "Connection issue with recv call. Quitting\n";
-          break;
-        }
-        if (bytesRecv == 0)
-        {
-          std::cout <<"Client disconnected\n";
-          break;
-        }
-        //display message
-        std::cout << "Received: " << std::string(buffer, 0, bytesRecv ) <<"\n";
-        //resend message
-        send(clientSocket, buffer,bytesRecv +1, 0);
-      }
-      // Close the socket
-      close(clientSocket);
-      
-    auto tTest = [](){std::cout<<"print this"<<std::endl;};
-    std::async(std::launch::async, tTest);
-    //ThreadPool::getInstance()->_threadPool.emplace_back();
 
+    char buffer[_SERVER.MAX_BUFFER];
+    while (true)
+    {
+      //clear the buffer
+      memset(buffer, 0, _SERVER.MAX_BUFFER);
+      //wait for message
+      int bytesRecv = recv(clientSocket, buffer, _SERVER.MAX_BUFFER, 0);
+      if(bytesRecv == -1)
+      {
+        std::cerr << "Connection issue with recv call. Quitting\n";
+        break;
+      }
+      if (bytesRecv == 0)
+      {
+        std::cout <<"Client disconnected\n";
+        break;
+      }
+      //display message
+      std::cout << "Received: " << std::string(buffer, 0, bytesRecv ) <<"\n";
+      //resend message
+      send(clientSocket, buffer,bytesRecv +1, 0);
+    }
+    // Close the socket
+    close(clientSocket);
   return 0;
 }

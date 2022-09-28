@@ -6,7 +6,6 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <string>
-#include "ThreadPool.h"
 
 const struct Server 
 {
@@ -24,4 +23,3 @@ enum TYPE
   SERVER = 0,
   CLIENT = 1
 };
-

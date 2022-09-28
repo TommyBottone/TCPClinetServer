@@ -26,8 +26,7 @@ int setupClient()
   char buffer[_SERVER.MAX_BUFFER];
   std::string userInput;
 
-  // Loop:
-  
+  // Loop:  
   do
   {
     // Enter text
