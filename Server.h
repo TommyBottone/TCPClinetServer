@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <string>
+#include <tuple>
 
 const struct Server 
 {
@@ -23,3 +24,10 @@ enum TYPE
   SERVER = 0,
   CLIENT = 1
 };
+
+static int clientSocket;
+static int listeningSocket;
+//Wrapper around send
+std::tuple<int, std::string> sendMessage(const void* buff, int size);
+//Wrapper around receive
+std::tuple<int, std::string> recvMessage(char* buff, int size);

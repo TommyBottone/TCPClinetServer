@@ -4,8 +4,8 @@ int setupClient()
 {
   std::string ipAddr = _SERVER.LOOP_BACK;
   // Create a socket
-  int sock = socket(_SERVER.DOMAIN, _SERVER.TYPE, 0);
-  if(sock == -1)
+  clientSocket = socket(_SERVER.DOMAIN, _SERVER.TYPE, 0);
+  if(clientSocket == -1)
   {
     std::cerr<<"Failed to make socket\n";
     return 1;
@@ -16,14 +16,13 @@ int setupClient()
   hint.sin_port = htons(_SERVER.PORT);
   inet_pton(_SERVER.DOMAIN, ipAddr.c_str(), &hint.sin_addr);
   // Connect to the server on the socket
-  int connectResult = connect(sock, (sockaddr*)&hint, sizeof(sockaddr_in));
+  int connectResult = connect(clientSocket, (sockaddr*)&hint, sizeof(sockaddr_in));
   if(connectResult == -1)
   {
     std::cerr<<"Client connection failed to connect\n";
     return 1;
   }
 
-  char buffer[_SERVER.MAX_BUFFER];
   std::string userInput;
 
   // Loop:  
@@ -33,27 +32,37 @@ int setupClient()
     std::cout << "Enter text: \n\t>";
     getline(std::cin, userInput);
     // Send to the server
-    int sendRes = send(sock, userInput.c_str(), userInput.size()+1, 0);
-    if(sendRes == -1)
+    auto returnVal = sendMessage(userInput.c_str(), userInput.size()+1);
+    if(std::get<0>(returnVal) >= 0)
     {
-      std::cerr <<"Could not send to the server!\n";
-      continue;
+      std::cout << "Repeat from SERVER: " << std::get<1>(returnVal) << "\r\n";
     }
-    memset(buffer, 0, _SERVER.MAX_BUFFER);
-    // Wait for response
-    int bytesReceived = recv(sock, buffer, _SERVER.MAX_BUFFER, 0);
-    if(bytesReceived == -1)
-    {
-      std::cerr << "Error getting the response from the server\r\n";
-    }
-    else 
-    {
-      // Display response
-      std::cout << "SERVER>" <<std::string(buffer, bytesReceived) << "\r\n";
-    }
+    
   }while(true);
   //close the socket
-  close(sock);
+  close(clientSocket);
   
   return 0;
+}
+
+std::tuple<int, std::string> sendMessage(const void* buff, int size)
+{
+  char buffer[_SERVER.MAX_BUFFER];
+  int sendRes = send(clientSocket, buff, size, 0);
+  memset(buffer, 0, _SERVER.MAX_BUFFER);
+  if(sendRes == -1)
+  {
+    std::cerr <<"Could not send to the server!\n";
+    return std::make_tuple(-1, "");
+  }
+  memset(buffer, 0, _SERVER.MAX_BUFFER);
+  // Wait for response
+  int bytesReceived = recv(clientSocket, buffer, _SERVER.MAX_BUFFER, 0);
+  if(bytesReceived == -1)
+  {
+    std::cerr << "Error getting the response from the server\r\n";
+    return std::make_tuple(-2, "");
+  }
+  
+  return std::make_tuple(bytesReceived, std::string(buffer, bytesReceived));
 }
