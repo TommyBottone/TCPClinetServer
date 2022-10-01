@@ -25,9 +25,25 @@ enum TYPE
   CLIENT = 1
 };
 
+struct MESSAGE
+{
+  MESSAGE(){};
+  MESSAGE(const char* m, TYPE s)
+  {
+    
+    memset(msg, 0, 4096);
+    strcpy(msg, m);
+    sender = s;
+  };
+  char msg[4096];
+  TYPE sender;
+};
+
+const size_t MESSAGE_SIZE = sizeof(MESSAGE);
+
 static int clientSocket;
 static int listeningSocket;
 //Wrapper around send
-std::tuple<int, std::string> sendMessage(const void* buff, int size);
+std::tuple<int, std::string> sendMessage(MESSAGE message, const int &size);
 //Wrapper around receive
-std::tuple<int, std::string> recvMessage(char* buff, int size);
+std::tuple<int, std::string> recvMessage();

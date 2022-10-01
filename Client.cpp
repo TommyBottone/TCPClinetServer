@@ -31,8 +31,11 @@ int setupClient()
     // Enter text
     std::cout << "Enter text: \n\t>";
     getline(std::cin, userInput);
+    
+    MESSAGE msg(userInput.c_str(), TYPE::CLIENT);
+    
     // Send to the server
-    auto returnVal = sendMessage(userInput.c_str(), userInput.size()+1);
+    auto returnVal = sendMessage(msg, MESSAGE_SIZE);
     if(std::get<0>(returnVal) >= 0)
     {
       std::cout << "Repeat from SERVER: " << std::get<1>(returnVal) << "\r\n";
@@ -45,24 +48,25 @@ int setupClient()
   return 0;
 }
 
-std::tuple<int, std::string> sendMessage(const void* buff, int size)
+std::tuple<int, std::string> sendMessage(MESSAGE message, const int &size)
 {
-  char buffer[_SERVER.MAX_BUFFER];
-  int sendRes = send(clientSocket, buff, size, 0);
-  memset(buffer, 0, _SERVER.MAX_BUFFER);
+  int sendRes = send(clientSocket, &message, size, 0);
   if(sendRes == -1)
   {
     std::cerr <<"Could not send to the server!\n";
     return std::make_tuple(-1, "");
   }
-  memset(buffer, 0, _SERVER.MAX_BUFFER);
   // Wait for response
-  int bytesReceived = recv(clientSocket, buffer, _SERVER.MAX_BUFFER, 0);
+  int bytesReceived = recv(clientSocket, &message, MESSAGE_SIZE, 0);
   if(bytesReceived == -1)
   {
     std::cerr << "Error getting the response from the server\r\n";
     return std::make_tuple(-2, "");
   }
-  
-  return std::make_tuple(bytesReceived, std::string(buffer, bytesReceived));
+  if(message.sender != TYPE::SERVER)
+  {
+    std::cerr <<"Message not sent from the server\r\n";
+    return std::make_tuple(-3, "");
+  }
+  return std::make_tuple(bytesReceived, std::string(message.msg, bytesReceived));
 }

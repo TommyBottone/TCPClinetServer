@@ -57,10 +57,9 @@ int setupServer()
     }
     // While receiving - display the message
 
-    char buffer[_SERVER.MAX_BUFFER];
     while (true)
     {
-      auto bytesRecv = recvMessage(buffer, _SERVER.MAX_BUFFER);
+      auto bytesRecv = recvMessage();
       if(std::get<0>(bytesRecv) <= 0)
       {
         std::cerr << "Connection issue with recv call. Quitting\n";
@@ -77,12 +76,12 @@ int setupServer()
   return 0;
 }
 
-std::tuple<int, std::string> recvMessage(char* buff, int size)
+std::tuple<int, std::string> recvMessage()
 {
   //clear the buffer
-    memset(buff, 0, size);
+  MESSAGE message;
     //wait for message
-    int bytesRecv = recv(clientSocket, buff, size, 0);
+    int bytesRecv = recv(clientSocket, &message, MESSAGE_SIZE, 0);
     if(bytesRecv == -1)
     {
       std::cerr << "Connection issue with recv call. Quitting\n";
@@ -90,11 +89,18 @@ std::tuple<int, std::string> recvMessage(char* buff, int size)
     }
     if (bytesRecv == 0)
     {
-      std::cout <<"Client disconnected\n";
+      std::cerr <<"Client disconnected\n";
       return std::make_tuple(bytesRecv, "");
     }
+    if(message.sender != TYPE::CLIENT)
+    {
+      std::cerr <<"Message not sent from the client\r\n";
+      return std::make_tuple(-1, ""); 
+    }
     //resend message
-    std::string reply = "Server received message: " + std::string(buff);
-    send(clientSocket, reply.c_str(), reply.size(), 0);
-    return std::make_tuple(bytesRecv, std::string(buff, bytesRecv ));
+    std::string reply = "Server received message: " + std::string(message.msg);
+    strcpy(message.msg, ("Server received message: " + std::string(message.msg)).c_str());
+    message.sender = SERVER;
+    send(clientSocket, &message, MESSAGE_SIZE, 0);
+    return std::make_tuple(bytesRecv, std::string(message.msg, bytesRecv ));
 }
